@@ -3,7 +3,7 @@ CFCWeaponLockouts = CFCWeaponLockouts or {}
 function CFCWeaponLockouts.weaponIsLocked( ply, weaponClass )
     if not IsValid( ply ) then return end
 
-    if not weaponClass then --The caller only knows the weapon, and not the player
+    if not weaponClass then -- The caller only knows the weapon, and not the player
         return ply.weaponLockoutIsLocked
     end
 
@@ -30,8 +30,8 @@ end
 util.AddNetworkString( "CFC_WeaponLockouts_LockWeapon" )
 util.AddNetworkString( "CFC_WeaponLockouts_UnlockWeapon" )
 
-CFCWeaponLockouts.LOCKOUT_TIME = 5
-CFCWeaponLockouts.WARN_BUILDUP = 0.2
+CFCWeaponLockouts.LOCKOUT_TIME = CreateConVar( "cfc_weaponlockouts_lockout_time", 5, FCVAR_NONE, "The time in seconds that weapons get locked out for (default 5)", 0, 50000 )
+CFCWeaponLockouts.WARN_BUILDUP = CreateConVar( "cfc_weaponlockouts_warn_buildup_window", 0.2, FCVAR_NONE, "The time window in seconds where locked weapons get grouped together (default 0.2)", 0, 50000 )
 CFCWeaponLockouts.NOT_LOCKABLE = {
     gmod_camera = true,
     gmod_tool = true,

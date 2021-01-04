@@ -1,24 +1,28 @@
 CFCWeaponLockouts = CFCWeaponLockouts or {}
-
-local lockWarns = {}
+CFCWeaponLockouts._lockWarns = {}
 
 function CFCWeaponLockouts.lockWeapon( ply, wep, lostWeapon )
     if not IsValid( ply ) then return end
 
-    if not wep then --The caller only knows the weapon, and not the player
+    if not wep then -- The caller only knows the weapon, and not the player
         wep = ply
         ply = wep.weaponLockoutOwner
 
         if not IsValid( ply ) then return end
     end
 
-    if not IsValid( wep ) or not wep:IsWeapon() or not ply:Alive() or CFCWeaponLockouts.NOT_LOCKABLE[wep:GetClass()] then return end
+    local weaponIsValid = IsValid( wep ) and wep:IsWeapon()
+    local playerIsValid = ply:Alive()
+    local weaponIsLockable = CFCWeaponLockouts.NOT_LOCKABLE[wep:GetClass()] == nil
+    local canLock = weaponIsValid and playerIsValid and weaponIsLockable
+
+    if not canLock then return end
 
     ply.weaponLockouts = ply.weaponLockouts or {}
     local lockouts = ply.weaponLockouts
     local weaponClass = wep:GetClass()
 
-    --If the caller thinks the weapon was lost, or if they are unsure and it was lost
+    -- If the caller thinks the weapon was lost, or if they are unsure and it was lost
     if lostWeapon or ( lostWeapon == nil and not ply:HasWeapon( weaponClass ) ) then
         ply.weaponLockoutWeapons = ply.weaponLockoutWeapons or {}
         ply.weaponLockoutWeapons[weaponClass] = nil
@@ -35,7 +39,7 @@ function CFCWeaponLockouts.lockWeapon( ply, wep, lostWeapon )
     } )
     net.Broadcast()
 
-    timer.Create( "CFC_WeaponLockouts_Unlock_" .. ply:SteamID() .. "_" .. weaponClass, CFCWeaponLockouts.LOCKOUT_TIME, 1, function()
+    timer.Create( "CFC_WeaponLockouts_Unlock_" .. ply:SteamID() .. "_" .. weaponClass, CFCWeaponLockouts.LOCKOUT_TIME:GetFloat(), 1, function()
         if not IsValid( ply ) then return end
 
         lockouts[weaponClass] = nil
@@ -117,7 +121,7 @@ local function warnPlayer( identifier, ply, warns )
         notif:SetTitle( "CFC WeaponLockouts" )
         notif:SetText( msg )
         notif:SetTextColor( color_white )
-        notif:SetDisplayTime( CFCWeaponLockouts.LOCKOUT_TIME - CFCWeaponLockouts.WARN_BUILDUP )
+        notif:SetDisplayTime( CFCWeaponLockouts.LOCKOUT_TIME:GetFloat() - CFCWeaponLockouts.WARN_BUILDUP:GetFloat() )
         notif:SetPriority( CFCNotifications.PRIORITY_LOW )
         notif:SetCloseable( true )
         notif:SetIgnoreable( true )
@@ -128,17 +132,17 @@ local function warnPlayer( identifier, ply, warns )
         ply:ChatPrint( msg )
     end
 
-    lockWarns[ply] = {}
+    CFCWeaponLockouts._lockWarns[ply] = {}
 end
 
 hook.Add( "PlayerSpawn", "CFC_WeaponLockouts_UnlockOnSpawn", function( ply )
     ply.weaponLockouts = {}
     ply.weaponLockoutWeapons = {}
-    lockWarns[ply] = {}
+    CFCWeaponLockouts._lockWarns[ply] = {}
 
-    --Clear out warn info from weapons spawned by default
+    -- Clear out warn info from weapons spawned by default
     timer.Create( "CFC_WeaponLockouts_LockWarn_" .. ply:SteamID(), 0, 1, function()
-        lockWarns[ply] = {}
+        CFCWeaponLockouts._lockWarns[ply] = {}
     end )
 end )
 
@@ -168,8 +172,8 @@ hook.Add( "WeaponEquip", "CFC_WeaponLockouts_CanPickup", function( wep, ply )
     local plyWeapons = ply.weaponLockoutWeapons
     local isLocked = CFCWeaponLockouts.weaponIsLocked( ply, weaponClass )
 
-    --In certain cases, EntityRemoved gets called after WeaponEquip, causing odd behavior where the weapon is unlocked, meant to be locked, and not held by the player.
-    --Manually keeping track of the weapon classes held by a player allows us to catch that error.
+    -- In certain cases, EntityRemoved gets called after WeaponEquip, causing odd behavior where the weapon is unlocked, meant to be locked, and not held by the player.
+    -- Manually keeping track of the weapon classes held by a player allows us to catch that error.
     if not isLocked and plyWeapons[weaponClass] and not CFCWeaponLockouts.NOT_LOCKABLE[wep:GetClass()] then
         isLocked = true
         CFCWeaponLockouts.lockWeapon( ply, wep, false )
@@ -177,40 +181,44 @@ hook.Add( "WeaponEquip", "CFC_WeaponLockouts_CanPickup", function( wep, ply )
 
     plyWeapons[weaponClass] = true
 
-    if isLocked then
-        local identifier = "CFC_WeaponLockouts_LockWarn_" .. ply:SteamID()
-        local warns = lockWarns[ply] or {}
-        warns[weaponClass] = "locked"
-        warns.lockedCount = ( warns.lockedCount or 0 ) + 1
+    if not isLocked then
+        CFCWeaponLockouts._lockWarns[ply][weaponClass] = "unlocked"
+        CFCWeaponLockouts._lockWarns[ply].unlockedCount = ( CFCWeaponLockouts._lockWarns[ply].unlockedCount or 0 ) + 1
 
-        timer.Create( identifier, CFCWeaponLockouts.WARN_BUILDUP, 1, function()
-            warnPlayer( identifier, ply, warns )
-        end )
-
-        local primaryAmmoType = wep:GetPrimaryAmmoType()
-        local secondaryAmmoType = wep:GetSecondaryAmmoType()
-        local primaryAmmo = ply:GetAmmoCount( primaryAmmoType ) or 0
-        local secondaryAmmo = ply:GetAmmoCount( secondaryAmmoType ) or 0
-        local clip1 = math.min( wep:Clip1() or 0, wep:GetMaxClip1() or 0 )
-        local clip2 = math.min( wep:Clip2() or 0, wep:GetMaxClip2() or 0 )
-
-        timer.Simple( 0, function()
-            if not IsValid( wep ) then return end
-            if primaryAmmo > 0 then ply:SetAmmo( 0, primaryAmmoType ) end
-            if secondaryAmmo > 0 then ply:SetAmmo( 0, secondaryAmmoType ) end
-            if clip1 > 0 then wep:SetClip1( 0 ) end
-            if clip2 > 0 then wep:SetClip2( 0 ) end
-        end )
-
-        timer.Simple( CFCWeaponLockouts.LOCKOUT_TIME, function()
-            if not IsValid( wep ) then return end
-            if primaryAmmo > 0 then ply:SetAmmo( primaryAmmo, primaryAmmoType ) end
-            if secondaryAmmo > 0 then ply:SetAmmo( secondaryAmmo, secondaryAmmoType ) end
-            if clip1 > 0 then wep:SetClip1( clip1 ) end
-            if clip2 > 0 then wep:SetClip2( clip2 ) end
-        end )
-    else
-        lockWarns[ply][weaponClass] = "unlocked"
-        lockWarns[ply].unlockedCount = ( lockWarns[ply].unlockedCount or 0 ) + 1
+        return
     end
+
+    local identifier = "CFC_WeaponLockouts_LockWarn_" .. ply:SteamID()
+    local warns = CFCWeaponLockouts._lockWarns[ply] or {}
+    warns[weaponClass] = "locked"
+    warns.lockedCount = ( warns.lockedCount or 0 ) + 1
+
+    timer.Create( identifier, CFCWeaponLockouts.WARN_BUILDUP:GetFloat(), 1, function()
+        warnPlayer( identifier, ply, warns )
+    end )
+
+    local primaryAmmoType = wep:GetPrimaryAmmoType()
+    local secondaryAmmoType = wep:GetSecondaryAmmoType()
+    local primaryAmmo = ply:GetAmmoCount( primaryAmmoType ) or 0
+    local secondaryAmmo = ply:GetAmmoCount( secondaryAmmoType ) or 0
+    local clip1 = math.min( wep:Clip1() or 0, wep:GetMaxClip1() or 0 )
+    local clip2 = math.min( wep:Clip2() or 0, wep:GetMaxClip2() or 0 )
+
+    -- Empties ammo and clips from the locked weapon
+    timer.Simple( 0, function()
+        if not IsValid( wep ) then return end
+        if primaryAmmo > 0 then ply:SetAmmo( 0, primaryAmmoType ) end
+        if secondaryAmmo > 0 then ply:SetAmmo( 0, secondaryAmmoType ) end
+        if clip1 > 0 then wep:SetClip1( 0 ) end
+        if clip2 > 0 then wep:SetClip2( 0 ) end
+    end )
+
+    -- Returns ammo and clips to the weapon
+    timer.Simple( CFCWeaponLockouts.LOCKOUT_TIME:GetFloat(), function()
+        if not IsValid( wep ) then return end
+        if primaryAmmo > 0 then ply:SetAmmo( primaryAmmo, primaryAmmoType ) end
+        if secondaryAmmo > 0 then ply:SetAmmo( secondaryAmmo, secondaryAmmoType ) end
+        if clip1 > 0 then wep:SetClip1( clip1 ) end
+        if clip2 > 0 then wep:SetClip2( clip2 ) end
+    end )
 end )
