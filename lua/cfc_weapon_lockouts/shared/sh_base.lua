@@ -30,8 +30,22 @@ end
 util.AddNetworkString( "CFC_WeaponLockouts_LockWeapon" )
 util.AddNetworkString( "CFC_WeaponLockouts_UnlockWeapon" )
 
-CFCWeaponLockouts.LOCKOUT_TIME = CreateConVar( "cfc_weaponlockouts_lockout_time", 5, FCVAR_NONE, "The time in seconds that weapons get locked out for (default 5)", 0, 50000 )
-CFCWeaponLockouts.WARN_BUILDUP = CreateConVar( "cfc_weaponlockouts_warn_buildup_window", 0.2, FCVAR_NONE, "The time window in seconds where locked weapons get grouped together (default 0.2)", 0, 50000 )
+CFCWeaponLockouts.LOCKOUT_TIME = CreateConVar(
+    "cfc_weaponlockouts_lockout_time",
+    5,
+    FCVAR_NONE,
+    "The time in seconds that weapons get locked out for (default 5)",
+    0,
+    50000
+)
+CFCWeaponLockouts.WARN_BUILDUP = CreateConVar(
+    "cfc_weaponlockouts_warn_buildup_window",
+    0.2,
+    FCVAR_NONE,
+    "The time window in seconds where locked weapons get grouped together (default 0.2)",
+    0,
+    50000
+)
 CFCWeaponLockouts.NOT_LOCKABLE = {
     gmod_camera = true,
     gmod_tool = true,

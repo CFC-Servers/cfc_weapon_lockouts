@@ -4,7 +4,7 @@ CFCWeaponLockouts._lockWarns = {}
 function CFCWeaponLockouts.lockWeapon( ply, wep, lostWeapon )
     if not IsValid( ply ) then return end
 
-    if not wep then -- The caller only knows the weapon, and not the player
+    if not wep then -- The caller only knows the weapon, and not the player, such as during EntityRemoved
         wep = ply
         ply = wep.weaponLockoutOwner
 
@@ -39,7 +39,10 @@ function CFCWeaponLockouts.lockWeapon( ply, wep, lostWeapon )
     } )
     net.Broadcast()
 
-    timer.Create( "CFC_WeaponLockouts_Unlock_" .. ply:SteamID() .. "_" .. weaponClass, CFCWeaponLockouts.LOCKOUT_TIME:GetFloat(), 1, function()
+    local timerName = "CFC_WeaponLockouts_Unlock_" .. ply:SteamID() .. "_" .. weaponClass
+    local timerDuration = CFCWeaponLockouts.LOCKOUT_TIME:GetFloat()
+
+    timer.Create( timerName, timerDuration, 1, function()
         if not IsValid( ply ) then return end
 
         lockouts[weaponClass] = nil
@@ -52,6 +55,58 @@ function CFCWeaponLockouts.lockWeapon( ply, wep, lostWeapon )
             class = weaponClass
         } )
         net.Broadcast()
+    end )
+end
+
+local function updateLockStatus( ply, wep, weaponClass )
+    local plyWeapons = ply.weaponLockoutWeapons
+    local isLocked = CFCWeaponLockouts.weaponIsLocked( ply, weaponClass )
+
+    -- In certain cases, EntityRemoved gets called after WeaponEquip, causing odd behavior where the weapon is unlocked, meant to be locked, and not held by the player.
+    -- Manually keeping track of the weapon classes held by a player allows us to catch that error.
+    if not isLocked and plyWeapons[weaponClass] and not CFCWeaponLockouts.NOT_LOCKABLE[weaponClass] then
+        isLocked = true
+        CFCWeaponLockouts.lockWeapon( ply, wep, false )
+    end
+
+    plyWeapons[weaponClass] = true
+
+    if not isLocked then
+        local unlockedCount = CFCWeaponLockouts._lockWarns[ply].unlockedCount or 0
+
+        CFCWeaponLockouts._lockWarns[ply][weaponClass] = "unlocked"
+        CFCWeaponLockouts._lockWarns[ply].unlockedCount = unlockedCount + 1
+
+        return false
+    end
+
+    return true
+end
+
+local function removeAmmo( ply, wep )
+    local primaryAmmoType = wep:GetPrimaryAmmoType()
+    local secondaryAmmoType = wep:GetSecondaryAmmoType()
+    local primaryAmmo = ply:GetAmmoCount( primaryAmmoType ) or 0
+    local secondaryAmmo = ply:GetAmmoCount( secondaryAmmoType ) or 0
+    local clip1 = math.min( wep:Clip1() or 0, wep:GetMaxClip1() or 0 )
+    local clip2 = math.min( wep:Clip2() or 0, wep:GetMaxClip2() or 0 )
+
+    -- Empties ammo and clips from the locked weapon
+    timer.Simple( 0, function()
+        if not IsValid( wep ) then return end
+        if primaryAmmo > 0 then ply:SetAmmo( 0, primaryAmmoType ) end
+        if secondaryAmmo > 0 then ply:SetAmmo( 0, secondaryAmmoType ) end
+        if clip1 > 0 then wep:SetClip1( 0 ) end
+        if clip2 > 0 then wep:SetClip2( 0 ) end
+    end )
+
+    -- Returns ammo and clips to the weapon
+    timer.Simple( CFCWeaponLockouts.LOCKOUT_TIME:GetFloat(), function()
+        if not IsValid( wep ) then return end
+        if primaryAmmo > 0 then ply:SetAmmo( primaryAmmo, primaryAmmoType ) end
+        if secondaryAmmo > 0 then ply:SetAmmo( secondaryAmmo, secondaryAmmoType ) end
+        if clip1 > 0 then wep:SetClip1( clip1 ) end
+        if clip2 > 0 then wep:SetClip2( clip2 ) end
     end )
 end
 
@@ -169,25 +224,9 @@ hook.Add( "WeaponEquip", "CFC_WeaponLockouts_CanPickup", function( wep, ply )
     ply.weaponLockoutWeapons = ply.weaponLockoutWeapons or {}
     wep.weaponLockoutOwner = ply
 
-    local plyWeapons = ply.weaponLockoutWeapons
-    local isLocked = CFCWeaponLockouts.weaponIsLocked( ply, weaponClass )
+    if not updateLockStatus( ply, wep, weaponClass ) then return end
 
-    -- In certain cases, EntityRemoved gets called after WeaponEquip, causing odd behavior where the weapon is unlocked, meant to be locked, and not held by the player.
-    -- Manually keeping track of the weapon classes held by a player allows us to catch that error.
-    if not isLocked and plyWeapons[weaponClass] and not CFCWeaponLockouts.NOT_LOCKABLE[wep:GetClass()] then
-        isLocked = true
-        CFCWeaponLockouts.lockWeapon( ply, wep, false )
-    end
-
-    plyWeapons[weaponClass] = true
-
-    if not isLocked then
-        CFCWeaponLockouts._lockWarns[ply][weaponClass] = "unlocked"
-        CFCWeaponLockouts._lockWarns[ply].unlockedCount = ( CFCWeaponLockouts._lockWarns[ply].unlockedCount or 0 ) + 1
-
-        return
-    end
-
+    -- Warn player if their weapon is locked, and update warn info
     local identifier = "CFC_WeaponLockouts_LockWarn_" .. ply:SteamID()
     local warns = CFCWeaponLockouts._lockWarns[ply] or {}
     warns[weaponClass] = "locked"
@@ -197,28 +236,5 @@ hook.Add( "WeaponEquip", "CFC_WeaponLockouts_CanPickup", function( wep, ply )
         warnPlayer( identifier, ply, warns )
     end )
 
-    local primaryAmmoType = wep:GetPrimaryAmmoType()
-    local secondaryAmmoType = wep:GetSecondaryAmmoType()
-    local primaryAmmo = ply:GetAmmoCount( primaryAmmoType ) or 0
-    local secondaryAmmo = ply:GetAmmoCount( secondaryAmmoType ) or 0
-    local clip1 = math.min( wep:Clip1() or 0, wep:GetMaxClip1() or 0 )
-    local clip2 = math.min( wep:Clip2() or 0, wep:GetMaxClip2() or 0 )
-
-    -- Empties ammo and clips from the locked weapon
-    timer.Simple( 0, function()
-        if not IsValid( wep ) then return end
-        if primaryAmmo > 0 then ply:SetAmmo( 0, primaryAmmoType ) end
-        if secondaryAmmo > 0 then ply:SetAmmo( 0, secondaryAmmoType ) end
-        if clip1 > 0 then wep:SetClip1( 0 ) end
-        if clip2 > 0 then wep:SetClip2( 0 ) end
-    end )
-
-    -- Returns ammo and clips to the weapon
-    timer.Simple( CFCWeaponLockouts.LOCKOUT_TIME:GetFloat(), function()
-        if not IsValid( wep ) then return end
-        if primaryAmmo > 0 then ply:SetAmmo( primaryAmmo, primaryAmmoType ) end
-        if secondaryAmmo > 0 then ply:SetAmmo( secondaryAmmo, secondaryAmmoType ) end
-        if clip1 > 0 then wep:SetClip1( clip1 ) end
-        if clip2 > 0 then wep:SetClip2( clip2 ) end
-    end )
+    removeAmmo( ply, wep )
 end )
