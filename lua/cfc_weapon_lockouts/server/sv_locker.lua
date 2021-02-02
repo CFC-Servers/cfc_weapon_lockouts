@@ -1,7 +1,8 @@
 CFCWeaponLockouts = CFCWeaponLockouts or {}
 CFCWeaponLockouts._lockWarns = {}
+CFCWeaponLockouts._backend = {}
 
-local function delayUnlock( ply, wep, weaponClass, duration )
+function CFCWeaponLockouts._backend.delayUnlock( ply, wep, weaponClass, duration )
     local timerName = "CFC_WeaponLockouts_Unlock_" .. ply:SteamID() .. "_" .. weaponClass
     duration = duration or CFCWeaponLockouts.LOCKOUT_TIME:GetFloat()
     local unlockTime = SysTime() + duration
@@ -44,17 +45,8 @@ function CFCWeaponLockouts.lockByClass( ply, weaponClass, duration )
     duration = duration or CFCWeaponLockouts.LOCKOUT_TIME:GetFloat()
     ply.weaponLockouts = ply.weaponLockouts or {}
     ply.weaponLockoutWeapons = ply.weaponLockoutWeapons or {}
-    local lockouts = ply.weaponLockouts
+    ply.weaponLockouts[weaponClass] = true
     local wep = ply:HasWeapon( weaponClass ) and ply:GetWeapon( weaponClass )
-
-    if wep then
-        ply.weaponLockoutWeapons[weaponClass] = true
-        wep.weaponLockoutIsLocked = true
-        wep.weaponLockoutOwner = ply
-
-        queueWarn( ply, weaponClass )
-        removeAmmo( ply, wep )
-    end
 
     net.Start( "CFC_WeaponLockouts_LockWeapon" )
     net.WriteTable( {
@@ -64,7 +56,16 @@ function CFCWeaponLockouts.lockByClass( ply, weaponClass, duration )
     } )
     net.Broadcast()
 
-    delayUnlock( ply, wep, weaponClass, duration )
+    CFCWeaponLockouts._backend.delayUnlock( ply, wep, weaponClass, duration )
+
+    if wep then
+        ply.weaponLockoutWeapons[weaponClass] = true
+        wep.weaponLockoutIsLocked = true
+        wep.weaponLockoutOwner = ply
+
+        CFCWeaponLockouts._backend.queueWarn( ply, weaponClass )
+        CFCWeaponLockouts._backend.removeAmmo( ply, wep )
+    end
 end
 
 function CFCWeaponLockouts.lockByWeapon( ply, wep, lostWeapon )
@@ -105,10 +106,10 @@ function CFCWeaponLockouts.lockByWeapon( ply, wep, lostWeapon )
 
     local duration = CFCWeaponLockouts.LOCKOUT_TIME:GetFloat()
 
-    delayUnlock( ply, wep, weaponClass, duration )
+    CFCWeaponLockouts._backend.delayUnlock( ply, wep, weaponClass, duration )
 end
 
-local function updateLockStatus( ply, wep, weaponClass )
+function CFCWeaponLockouts._backend.updateLockStatus( ply, wep, weaponClass )
     local plyWeapons = ply.weaponLockoutWeapons
     local isLocked = CFCWeaponLockouts.weaponIsLocked( ply, weaponClass )
 
@@ -133,7 +134,7 @@ local function updateLockStatus( ply, wep, weaponClass )
     return true
 end
 
-local function removeAmmo( ply, wep )
+function CFCWeaponLockouts._backend.removeAmmo( ply, wep )
     local primaryAmmoType = wep:GetPrimaryAmmoType()
     local secondaryAmmoType = wep:GetSecondaryAmmoType()
     local primaryAmmo = ply:GetAmmoCount( primaryAmmoType ) or 0
@@ -160,18 +161,18 @@ local function removeAmmo( ply, wep )
     end )
 end
 
-local function queueWarn( ply, weaponClass )
+function CFCWeaponLockouts._backend.queueWarn( ply, weaponClass )
     local identifier = "CFC_WeaponLockouts_LockWarn_" .. ply:SteamID()
     local warns = CFCWeaponLockouts._lockWarns[ply] or {}
     warns[weaponClass] = "locked"
     warns.lockedCount = ( warns.lockedCount or 0 ) + 1
 
     timer.Create( identifier, CFCWeaponLockouts.WARN_BUILDUP:GetFloat(), 1, function()
-        warnPlayer( identifier, ply, warns )
+        CFCWeaponLockouts._backend.warnPlayer( identifier, ply, warns )
     end )
 end
 
-local function warnPlayer( identifier, ply, warns )
+function CFCWeaponLockouts._backend.warnPlayer( identifier, ply, warns )
     if not IsValid( ply ) or table.IsEmpty( warns ) then return end
 
     local lockedCount = warns.lockedCount or 0
@@ -296,8 +297,8 @@ hook.Add( "WeaponEquip", "CFC_WeaponLockouts_CanPickup", function( wep, ply )
     ply.weaponLockoutWeapons = ply.weaponLockoutWeapons or {}
     wep.weaponLockoutOwner = ply
 
-    if not updateLockStatus( ply, wep, weaponClass ) then return end
+    if not CFCWeaponLockouts._backend.updateLockStatus( ply, wep, weaponClass ) then return end
 
-    queueWarn( ply, weaponClass )
-    removeAmmo( ply, wep )
+    CFCWeaponLockouts._backend.queueWarn( ply, weaponClass )
+    CFCWeaponLockouts._backend.removeAmmo( ply, wep )
 end )
