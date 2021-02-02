@@ -3,7 +3,10 @@ net.Receive( "CFC_WeaponLockouts_LockWeapon", function()
 
     data.ply.weaponLockouts = data.ply.weaponLockouts or {}
     data.ply.weaponLockouts[data.class] = true
-    data.wep.weaponLockoutIsLocked = true
+
+    if IsValid( wep ) then
+        data.wep.weaponLockoutIsLocked = true
+    end
 end )
 
 net.Receive( "CFC_WeaponLockouts_UnlockWeapon", function()
@@ -11,5 +14,8 @@ net.Receive( "CFC_WeaponLockouts_UnlockWeapon", function()
 
     data.ply.weaponLockouts = data.ply.weaponLockouts or {}
     data.ply.weaponLockouts[data.class] = nil
-    data.wep.weaponLockoutIsLocked = nil
+    
+    if IsValid( wep ) then
+        data.wep.weaponLockoutIsLocked = nil
+    end
 end )
