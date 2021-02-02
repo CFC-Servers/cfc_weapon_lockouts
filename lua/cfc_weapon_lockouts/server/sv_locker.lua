@@ -5,7 +5,6 @@ CFCWeaponLockouts._backend = {}
 function CFCWeaponLockouts._backend.delayUnlock( ply, wep, weaponClass, duration )
     local timerName = "CFC_WeaponLockouts_Unlock_" .. ply:SteamID() .. "_" .. weaponClass
     duration = duration or CFCWeaponLockouts.LOCKOUT_TIME:GetFloat()
-    local unlockTime = SysTime() + duration
 
     ply.weaponLockoutTimes = ply.weaponLockoutTimes or {}
     ply.weaponLockoutTimes[weaponClass] = SysTime() + duration
