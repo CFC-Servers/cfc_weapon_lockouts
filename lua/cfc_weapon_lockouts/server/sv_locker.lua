@@ -29,7 +29,7 @@ local function delayUnlock( ply, wep, weaponClass, duration )
 end
 
 function CFCWeaponLockouts.lockByClass( ply, weaponClass, duration )
-    if not IsValid( ply ) or not IsPlayer( ply ) then
+    if not IsValid( ply ) or not ply:IsPlayer() then
         error( "That is not a valid player." )
 
         return
@@ -79,7 +79,7 @@ function CFCWeaponLockouts.lockByWeapon( ply, wep, lostWeapon )
 
     local weaponClass = wep:GetClass()
     local weaponIsValid = IsValid( wep ) and wep:IsWeapon()
-    local playerIsValid = IsPlayer( ply ) and ply:Alive()
+    local playerIsValid = ply:IsPlayer() and ply:Alive()
     local weaponIsLockable = CFCWeaponLockouts.NOT_LOCKABLE[weaponClass] == nil
     local canLock = weaponIsValid and playerIsValid and weaponIsLockable
 
