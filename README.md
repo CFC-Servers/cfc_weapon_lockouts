@@ -5,7 +5,7 @@ Temporarily denies the use of specific weapons
 WeaponLockouts adds the ability to deny a player from firing weapons on a per-class basis for a certain amount of time.  
 It uses this to prevent players from ignoring reload animations by dropping and respawning weapons, but it can also be used to lock any weapon at any time.  
 Players get alerted about their locked weapons once they pick up a weapon that is locked, or right away if they already have the weapon when it gets locked.  
-If The server also has [CFC Notifications](https://github.com/CFC-Servers/cfc_notifications/ "CFC Notifications") then this will automatically utilize it, replacing lockout chat warnings with timed, interactive popups.  
+If the server also has [CFC Notifications](https://github.com/CFC-Servers/cfc_notifications/ "CFC Notifications") then this will automatically utilize it, replacing lockout chat warnings with timed, interactive popups.  
 
 ## Usage
 If you simply want to prevent players from skipping reload animations, applying this addon to the server is all that's required.
