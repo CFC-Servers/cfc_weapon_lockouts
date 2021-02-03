@@ -4,7 +4,7 @@ function CFCWeaponLockouts.weaponIsLocked( ply, weaponClass )
     if not IsValid( ply ) then return end
 
     if not weaponClass then -- The caller only knows the weapon, and not the player
-        return ply.weaponLockoutIsLocked
+        return ply.weaponLockout_IsLocked
     end
 
     ply.weaponLockouts = ply.weaponLockouts or {}

@@ -6,8 +6,8 @@ function CFCWeaponLockouts._backend.delayUnlock( ply, wep, weaponClass, duration
     local timerName = "CFC_WeaponLockouts_Unlock_" .. ply:SteamID() .. "_" .. weaponClass
     duration = duration or CFCWeaponLockouts.LOCKOUT_TIME:GetFloat()
 
-    ply.weaponLockoutTimes = ply.weaponLockoutTimes or {}
-    ply.weaponLockoutTimes[weaponClass] = SysTime() + duration
+    ply.weaponLockout_Times = ply.weaponLockout_Times or {}
+    ply.weaponLockout_Times[weaponClass] = SysTime() + duration
 
     timer.Create( timerName, duration, 1, function()
         if not IsValid( ply ) then return end
@@ -15,7 +15,7 @@ function CFCWeaponLockouts._backend.delayUnlock( ply, wep, weaponClass, duration
         ply.weaponLockouts[weaponClass] = nil
 
         if IsValid( wep ) then
-            wep.weaponLockoutIsLocked = nil
+            wep.weaponLockout_IsLocked = nil
         end
 
         net.Start( "CFC_WeaponLockouts_UnlockWeapon" )
@@ -43,7 +43,7 @@ function CFCWeaponLockouts.lockByClass( ply, weaponClass, duration )
 
     duration = duration or CFCWeaponLockouts.LOCKOUT_TIME:GetFloat()
     ply.weaponLockouts = ply.weaponLockouts or {}
-    ply.weaponLockoutWeapons = ply.weaponLockoutWeapons or {}
+    ply.weaponLockout_Weapons = ply.weaponLockout_Weapons or {}
     ply.weaponLockouts[weaponClass] = true
     local wep = ply:HasWeapon( weaponClass ) and ply:GetWeapon( weaponClass )
 
@@ -58,9 +58,9 @@ function CFCWeaponLockouts.lockByClass( ply, weaponClass, duration )
     CFCWeaponLockouts._backend.delayUnlock( ply, wep, weaponClass, duration )
 
     if wep then
-        ply.weaponLockoutWeapons[weaponClass] = true
-        wep.weaponLockoutIsLocked = true
-        wep.weaponLockoutOwner = ply
+        ply.weaponLockout_Weapons[weaponClass] = true
+        wep.weaponLockout_IsLocked = true
+        wep.weaponLockout_Owner = ply
 
         CFCWeaponLockouts._backend.queueWarn( ply, weaponClass )
         CFCWeaponLockouts._backend.removeAmmo( ply, wep )
@@ -72,7 +72,7 @@ function CFCWeaponLockouts.lockByWeapon( ply, wep, lostWeapon )
 
     if not wep then -- The caller only knows the weapon, and not the player, such as during EntityRemoved
         wep = ply
-        ply = wep.weaponLockoutOwner
+        ply = wep.weaponLockout_Owner
 
         if not IsValid( ply ) then return end
     end
@@ -87,13 +87,13 @@ function CFCWeaponLockouts.lockByWeapon( ply, wep, lostWeapon )
 
     -- If the caller thinks the weapon was lost, or if they are unsure and it was lost
     if lostWeapon or ( lostWeapon == nil and not ply:HasWeapon( weaponClass ) ) then
-        ply.weaponLockoutWeapons = ply.weaponLockoutWeapons or {}
-        ply.weaponLockoutWeapons[weaponClass] = nil
+        ply.weaponLockout_Weapons = ply.weaponLockout_Weapons or {}
+        ply.weaponLockout_Weapons[weaponClass] = nil
     end
 
     ply.weaponLockouts = ply.weaponLockouts or {}
     ply.weaponLockouts[weaponClass] = true
-    wep.weaponLockoutIsLocked = true
+    wep.weaponLockout_IsLocked = true
 
     net.Start( "CFC_WeaponLockouts_LockWeapon" )
     net.WriteTable( {
@@ -109,7 +109,7 @@ function CFCWeaponLockouts.lockByWeapon( ply, wep, lostWeapon )
 end
 
 function CFCWeaponLockouts._backend.updateLockStatus( ply, wep, weaponClass )
-    local plyWeapons = ply.weaponLockoutWeapons
+    local plyWeapons = ply.weaponLockout_Weapons
     local isLocked = CFCWeaponLockouts.weaponIsLocked( ply, weaponClass )
 
     -- In certain cases, EntityRemoved gets called after WeaponEquip, causing odd behavior where the weapon is unlocked, meant to be locked, and not held by the player.
@@ -151,7 +151,7 @@ function CFCWeaponLockouts._backend.removeAmmo( ply, wep )
     end )
 
     -- Returns ammo and clips to the weapon
-    timer.Simple( ply.weaponLockoutTimes[wep:GetClass()] - SysTime(), function()
+    timer.Simple( ply.weaponLockout_Times[wep:GetClass()] - SysTime(), function()
         if not IsValid( wep ) then return end
         if primaryAmmo > 0 then ply:SetAmmo( primaryAmmo, primaryAmmoType ) end
         if secondaryAmmo > 0 then ply:SetAmmo( secondaryAmmo, secondaryAmmoType ) end
@@ -236,7 +236,7 @@ function CFCWeaponLockouts._backend.warnPlayer( identifier, ply, warns )
 
         local duration = 0
 
-        for class, time in pairs( ply.weaponLockoutTimes ) do
+        for class, time in pairs( ply.weaponLockout_Times ) do
             if warns[class] == "locked" and time > duration then
                 duration = time
             end
@@ -264,7 +264,7 @@ end
 
 hook.Add( "PlayerSpawn", "CFC_WeaponLockouts_UnlockOnSpawn", function( ply )
     ply.weaponLockouts = {}
-    ply.weaponLockoutWeapons = {}
+    ply.weaponLockout_Weapons = {}
     CFCWeaponLockouts._lockWarns[ply] = {}
 
     -- Clear out warn info from weapons spawned by default
@@ -286,15 +286,15 @@ end )
 hook.Add( "PlayerSwitchWeapon", "CFC_WeaponLockouts_TrackWeaponOwner", function( ply, old, new )
     if not IsValid( new ) then return end
 
-    new.weaponLockoutOwner = ply
+    new.weaponLockout_Owner = ply
 end )
 
 hook.Add( "WeaponEquip", "CFC_WeaponLockouts_CanPickup", function( wep, ply )
     if not IsValid( wep ) or not IsValid( ply ) then return end
 
     local weaponClass = wep:GetClass()
-    ply.weaponLockoutWeapons = ply.weaponLockoutWeapons or {}
-    wep.weaponLockoutOwner = ply
+    ply.weaponLockout_Weapons = ply.weaponLockout_Weapons or {}
+    wep.weaponLockout_Owner = ply
 
     if not CFCWeaponLockouts._backend.updateLockStatus( ply, wep, weaponClass ) then return end
 
