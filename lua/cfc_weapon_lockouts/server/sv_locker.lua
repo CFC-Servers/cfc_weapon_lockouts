@@ -67,7 +67,7 @@ function CFCWeaponLockouts.lockByClass( ply, weaponClass, duration )
     end
 end
 
-function CFCWeaponLockouts.lockByWeapon( ply, wep, lostWeapon )
+function CFCWeaponLockouts._backend.lockByWeapon( ply, wep, lostWeapon, duration )
     if not IsValid( ply ) then return end
 
     if not wep then -- The caller only knows the weapon, and not the player, such as during EntityRemoved
@@ -103,9 +103,13 @@ function CFCWeaponLockouts.lockByWeapon( ply, wep, lostWeapon )
     } )
     net.Broadcast()
 
-    local duration = CFCWeaponLockouts.LOCKOUT_TIME:GetFloat()
+    duration = duration or CFCWeaponLockouts.LOCKOUT_TIME:GetFloat()
 
     CFCWeaponLockouts._backend.delayUnlock( ply, wep, weaponClass, duration )
+end
+
+function CFCWeaponLockouts.lockByWeapon( duration, ply, wep )
+    CFCWeaponLockouts._backend.lockByWeapon( ply, wep, nil, duration )
 end
 
 function CFCWeaponLockouts._backend.updateLockStatus( ply, wep, weaponClass )
@@ -116,7 +120,7 @@ function CFCWeaponLockouts._backend.updateLockStatus( ply, wep, weaponClass )
     -- Manually keeping track of the weapon classes held by a player allows us to catch that error.
     if not isLocked and plyWeapons[weaponClass] and not CFCWeaponLockouts.NOT_LOCKABLE[weaponClass] then
         isLocked = true
-        CFCWeaponLockouts.lockByWeapon( ply, wep, false )
+        CFCWeaponLockouts._backend.lockByWeapon( ply, wep, false )
     end
 
     plyWeapons[weaponClass] = true
@@ -274,13 +278,13 @@ hook.Add( "PlayerSpawn", "CFC_WeaponLockouts_UnlockOnSpawn", function( ply )
 end )
 
 hook.Add( "PlayerDroppedWeapon", "CFC_WeaponLockouts_LockWeapon", function( ply, wep )
-    CFCWeaponLockouts.lockByWeapon( ply, wep, true )
+    CFCWeaponLockouts._backend.lockByWeapon( ply, wep, true )
 end )
 
 hook.Add( "EntityRemoved", "CFC_WeaponLockouts_LockWeapon", function( ent )
     if not IsValid( ent ) or not ent:IsWeapon() then return end
 
-    CFCWeaponLockouts.lockByWeapon( ent )
+    CFCWeaponLockouts._backend.lockByWeapon( ent )
 end )
 
 hook.Add( "PlayerSwitchWeapon", "CFC_WeaponLockouts_TrackWeaponOwner", function( ply, old, new )
