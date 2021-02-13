@@ -19,11 +19,9 @@ function CFCWeaponLockouts._backend.delayUnlock( ply, wep, weaponClass, duration
         end
 
         net.Start( "CFC_WeaponLockouts_UnlockWeapon" )
-        net.WriteTable( {
-            ply = ply,
-            wep = wep,
-            class = weaponClass
-        } )
+        net.WriteEntity( ply )
+        net.WriteEntity( wep )
+        net.WriteString( weaponClass )
         net.Broadcast()
     end )
 end
@@ -48,11 +46,9 @@ function CFCWeaponLockouts.lockByClass( ply, weaponClass, duration )
     local wep = ply:HasWeapon( weaponClass ) and ply:GetWeapon( weaponClass )
 
     net.Start( "CFC_WeaponLockouts_LockWeapon" )
-    net.WriteTable( {
-        ply = ply,
-        wep = wep,
-        class = weaponClass
-    } )
+    net.WriteEntity( ply )
+    net.WriteEntity( wep )
+    net.WriteString( weaponClass )
     net.Broadcast()
 
     CFCWeaponLockouts._backend.delayUnlock( ply, wep, weaponClass, duration )
@@ -96,11 +92,9 @@ function CFCWeaponLockouts._backend.lockByWeapon( ply, wep, lostWeapon, duration
     wep.weaponLockout_IsLocked = true
 
     net.Start( "CFC_WeaponLockouts_LockWeapon" )
-    net.WriteTable( {
-        ply = ply,
-        wep = wep,
-        class = weaponClass
-    } )
+    net.WriteEntity( ply )
+    net.WriteEntity( wep )
+    net.WriteString( weaponClass )
     net.Broadcast()
 
     duration = duration or CFCWeaponLockouts.LOCKOUT_TIME:GetFloat()
