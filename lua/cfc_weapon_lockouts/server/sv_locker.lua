@@ -169,9 +169,7 @@ function CFCWeaponLockouts._backend.queueWarn( ply, weaponClass )
     end )
 end
 
-function CFCWeaponLockouts._backend.warnPlayer( identifier, ply, warns )
-    if not IsValid( ply ) or table.IsEmpty( warns ) then return end
-
+local function generateWarnMessage( warns )
     local lockedCount = warns.lockedCount or 0
     local unlockedCount = warns.unlockedCount or 0
 
@@ -228,6 +226,10 @@ function CFCWeaponLockouts._backend.warnPlayer( identifier, ply, warns )
         end
     end
 
+    return msg
+end
+
+local function sendWarnMessage( ply, warns, msg, identifier )
     if CFCNotifications then
         CFCNotifications.new( identifier, "Text", true )
         local notif = CFCNotifications.get( identifier )
@@ -256,6 +258,13 @@ function CFCWeaponLockouts._backend.warnPlayer( identifier, ply, warns )
     else
         ply:ChatPrint( msg )
     end
+end
+
+function CFCWeaponLockouts._backend.warnPlayer( identifier, ply, warns )
+    if not IsValid( ply ) or table.IsEmpty( warns ) then return end
+
+    local msg = generateWarnMessage( warns )
+    sendWarnMessage( ply, warns, msg, identifier )
 
     CFCWeaponLockouts._lockWarns[ply] = {}
 end
