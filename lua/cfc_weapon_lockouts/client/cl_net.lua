@@ -3,6 +3,8 @@ net.Receive( "CFC_WeaponLockouts_LockWeapon", function()
     local wep = net.ReadEntity()
     local class = net.ReadString()
 
+    if not IsValid( ply ) then return end
+
     ply.weaponLockouts = ply.weaponLockouts or {}
     ply.weaponLockouts[class] = true
 
@@ -15,6 +17,8 @@ net.Receive( "CFC_WeaponLockouts_UnlockWeapon", function()
     local ply = net.ReadEntity()
     local wep = net.ReadEntity()
     local class = net.ReadString()
+
+    if not IsValid( ply ) then return end
 
     ply.weaponLockouts = ply.weaponLockouts or {}
     ply.weaponLockouts[class] = nil
