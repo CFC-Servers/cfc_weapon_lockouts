@@ -66,7 +66,7 @@ CFCWeaponLockouts.NOT_LOCKABLE = {
     remotecontroller = true,
     weapon_simremote = true,
     weapon_simrepair = true,
-    cfc_weapon_parachute = true,
+    cfc_weapon_parachute = true
 }
 
 include( "cfc_weapon_lockouts/server/sv_locker.lua" )
