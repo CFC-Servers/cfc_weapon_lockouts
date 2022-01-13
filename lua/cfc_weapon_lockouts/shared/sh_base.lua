@@ -46,7 +46,7 @@ CFCWeaponLockouts.WARN_BUILDUP = CreateConVar(
     0,
     50000
 )
-CFCWeaponLockouts.NOT_LOCKABLE = {
+CFCWeaponLockouts.NOT_LOCKABLE = { -- These weapons will not be affected by Weapon Lockouts
     gmod_camera = true,
     gmod_tool = true,
     none = true,
@@ -66,7 +66,16 @@ CFCWeaponLockouts.NOT_LOCKABLE = {
     remotecontroller = true,
     weapon_simremote = true,
     weapon_simrepair = true,
-    cfc_weapon_parachute = true
+    cfc_weapon_parachute = true,
+    cfc_weapon_shaped_charge = true
+}
+CFCWeaponLockouts.NOT_LOCKABLE_HOLDTYPES = { -- Weapons with these holdtypes will not be lockable
+    melee = true,
+    melee2 = true,
+    knife = true,
+    fist = true
+}
+CFCWeaponLockouts.FORCE_LOCKABLE = { -- Forces a weapon class to be lockable, even if it falls under NOT_LOCKABLE_HOLDTYPES
 }
 
 include( "cfc_weapon_lockouts/server/sv_locker.lua" )
