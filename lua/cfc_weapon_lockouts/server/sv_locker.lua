@@ -132,6 +132,11 @@ function CFCWeaponLockouts._backend.updateLockStatus( ply, wep, weaponClass )
 end
 
 function CFCWeaponLockouts._backend.removeAmmo( ply, wep )
+    local unlockTime = ply.weaponLockout_Times[wep:GetClass()]
+    local curTime = SysTime()
+
+    if not unlockTime or unlockTime < curTime then return end -- We shouldn't do anything if the weapon isn't actually locked or has an unclear unlock time
+
     local primaryAmmoType = wep:GetPrimaryAmmoType()
     local secondaryAmmoType = wep:GetSecondaryAmmoType()
     local primaryAmmo = ply:GetAmmoCount( primaryAmmoType ) or 0
@@ -148,11 +153,8 @@ function CFCWeaponLockouts._backend.removeAmmo( ply, wep )
         if clip2 > 0 then wep:SetClip2( 0 ) end
     end )
 
-    local curTime = SysTime()
-    local duration = ply.weaponLockout_Times[wep:GetClass()] or curTime
-
     -- Returns ammo and clips to the weapon
-    timer.Simple( duration - curTime, function()
+    timer.Simple( unlockTime - curTime, function()
         if not IsValid( wep ) then return end
         if primaryAmmo > 0 then ply:SetAmmo( primaryAmmo, primaryAmmoType ) end
         if secondaryAmmo > 0 then ply:SetAmmo( secondaryAmmo, secondaryAmmoType ) end
