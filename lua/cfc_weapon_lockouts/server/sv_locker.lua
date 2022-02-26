@@ -148,8 +148,11 @@ function CFCWeaponLockouts._backend.removeAmmo( ply, wep )
         if clip2 > 0 then wep:SetClip2( 0 ) end
     end )
 
+    local curTime = SysTime()
+    local duration = ply.weaponLockout_Times[wep:GetClass()] or curTime
+
     -- Returns ammo and clips to the weapon
-    timer.Simple( ply.weaponLockout_Times[wep:GetClass()] - SysTime(), function()
+    timer.Simple( duration - curTime, function()
         if not IsValid( wep ) then return end
         if primaryAmmo > 0 then ply:SetAmmo( primaryAmmo, primaryAmmoType ) end
         if secondaryAmmo > 0 then ply:SetAmmo( secondaryAmmo, secondaryAmmoType ) end
