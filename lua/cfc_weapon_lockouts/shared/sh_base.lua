@@ -71,7 +71,7 @@ CFCWeaponLockouts.LOCKABLE = {
 
     -- Misc:
     weapon_medkit = true,
-    m9k_m98b = true,
+    m9k_m98b = true
 }
 
 include( "cfc_weapon_lockouts/server/sv_locker.lua" )

@@ -104,7 +104,7 @@ function CFCWeaponLockouts._backend.lockByWeapon( ply, wep, lostWeapon, duration
     CFCWeaponLockouts._backend.delayUnlock( ply, wep, weaponClass, duration )
 end
 
-function CFCWeaponLockouts.lockByWeapon( duration, ply, wep )
+function CFCWeaponLockouts.lockByWeapon( ply, wep, duration )
     CFCWeaponLockouts._backend.lockByWeapon( ply, wep, nil, duration )
 end
 
