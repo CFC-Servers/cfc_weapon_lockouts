@@ -4,7 +4,7 @@ CFCWeaponLockouts._backend = {}
 
 function CFCWeaponLockouts._backend.delayUnlock( ply, wep, weaponClass, duration )
     local timerName = "CFC_WeaponLockouts_Unlock_" .. ply:SteamID() .. "_" .. weaponClass
-    duration = duration or CFCWeaponLockouts.LOCKOUT_TIME:GetFloat()
+    duration = duration or tonumber( CFCWeaponLockouts.LOCKABLE[weaponClass] ) or CFCWeaponLockouts.LOCKOUT_TIME:GetFloat()
 
     ply.weaponLockout_Times = ply.weaponLockout_Times or {}
     ply.weaponLockout_Times[weaponClass] = SysTime() + duration
@@ -33,13 +33,15 @@ function CFCWeaponLockouts.lockByClass( ply, weaponClass, duration )
         return
     end
 
-    if not CFCWeaponLockouts.LOCKABLE[weaponClass] then
+    local classIsLockable = CFCWeaponLockouts.LOCKABLE[weaponClass]
+
+    if not classIsLockable then
         error( "That weapon class cannot be locked." )
 
         return
     end
 
-    duration = duration or CFCWeaponLockouts.LOCKOUT_TIME:GetFloat()
+    duration = duration or tonumber( classIsLockable ) or CFCWeaponLockouts.LOCKOUT_TIME:GetFloat()
     ply.weaponLockouts = ply.weaponLockouts or {}
     ply.weaponLockout_Weapons = ply.weaponLockout_Weapons or {}
     ply.weaponLockouts[weaponClass] = true
@@ -97,7 +99,7 @@ function CFCWeaponLockouts._backend.lockByWeapon( ply, wep, lostWeapon, duration
     net.WriteString( weaponClass )
     net.Broadcast()
 
-    duration = duration or CFCWeaponLockouts.LOCKOUT_TIME:GetFloat()
+    duration = duration or tonumber( weaponIsLockable ) or CFCWeaponLockouts.LOCKOUT_TIME:GetFloat()
 
     CFCWeaponLockouts._backend.delayUnlock( ply, wep, weaponClass, duration )
 end

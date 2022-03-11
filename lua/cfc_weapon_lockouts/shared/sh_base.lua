@@ -47,6 +47,7 @@ CFCWeaponLockouts.WARN_BUILDUP = CreateConVar(
     50000
 )
 
+-- If value is a number instead of true, it will specify that class' default lock duration.
 CFCWeaponLockouts.LOCKABLE = {
     -- RPGs and similar weapons:
     weapon_rpg = true,
