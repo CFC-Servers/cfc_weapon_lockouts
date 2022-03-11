@@ -17,16 +17,16 @@ Temporarily locks a weapon class for a player.
   - `weaponClass` - The weapon class to deny usage of.
   - `duration` - Time in seconds to lock the weapon for. Defaults to `cfc_weaponlockouts_lockout_time`.
 
-- `CFCWeaponLockouts.lockByWeapon( duration, player, weapon )`
+- `CFCWeaponLockouts.lockByWeapon( player, weapon, duration )`
 Temporarily locks a weapon class for a player.
-  - `duration` - Time in seconds to lock the weapon for. Defaults to `cfc_weaponlockouts_lockout_time`.
   - `player` - The player to lock a weapon class for.
   - `weapon` - The class of this weapon will be locked.
-
-- `CFCWeaponLockouts.lockByWeapon( duration, weapon )`
-Temporarily locks a weapon class for the owner of a weapon. Useful for if you know the weapon, but not the player, as weapon ownership has to be tracked manually.
   - `duration` - Time in seconds to lock the weapon for. Defaults to `cfc_weaponlockouts_lockout_time`.
+
+- `CFCWeaponLockouts.lockByWeapon( nil, weapon, duration )`
+Temporarily locks a weapon class for the owner of a weapon. Useful for if you know the weapon, but not the player, as weapon ownership has to be tracked manually.
   - `weapon` - The player with this weapon equipped will have this weapon's class become locked.
+  - `duration` - Time in seconds to lock the weapon for. Defaults to `cfc_weaponlockouts_lockout_time`.
 
 ## SVars
 - `cfc_weaponlockouts_lockout_time`
