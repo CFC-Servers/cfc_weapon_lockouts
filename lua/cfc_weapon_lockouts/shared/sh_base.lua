@@ -61,7 +61,6 @@ CFCWeaponLockouts.LOCKABLE = {
     m9k_ares_shrike = true,
     m9k_m249lmg = true,
     m9k_m60 = true,
-    m9k_minigun = true,
     m9k_pkm = true,
     m9k_barret_m82 = true,
     m9k_psg1 = true,
