@@ -33,7 +33,7 @@ function CFCWeaponLockouts.lockByClass( ply, weaponClass, duration )
         return
     end
 
-    if CFCWeaponLockouts.NOT_LOCKABLE[weaponClass] then
+    if not CFCWeaponLockouts.LOCKABLE[weaponClass] then
         error( "That weapon class cannot be locked." )
 
         return
@@ -76,7 +76,7 @@ function CFCWeaponLockouts._backend.lockByWeapon( ply, wep, lostWeapon, duration
     local weaponClass = wep:GetClass()
     local weaponIsValid = IsValid( wep ) and wep:IsWeapon()
     local playerIsValid = ply:IsPlayer() and ply:Alive()
-    local weaponIsLockable = CFCWeaponLockouts.NOT_LOCKABLE[weaponClass] == nil
+    local weaponIsLockable = CFCWeaponLockouts.LOCKABLE[weaponClass]
     local canLock = weaponIsValid and playerIsValid and weaponIsLockable
 
     if not canLock then return end
@@ -112,7 +112,7 @@ function CFCWeaponLockouts._backend.updateLockStatus( ply, wep, weaponClass )
 
     -- In certain cases, EntityRemoved gets called after WeaponEquip, causing odd behavior where the weapon is unlocked, meant to be locked, and not held by the player.
     -- Manually keeping track of the weapon classes held by a player allows us to catch that error.
-    if not isLocked and plyWeapons[weaponClass] and not CFCWeaponLockouts.NOT_LOCKABLE[weaponClass] then
+    if not isLocked and plyWeapons[weaponClass] and CFCWeaponLockouts.LOCKABLE[weaponClass] then
         isLocked = true
         CFCWeaponLockouts._backend.lockByWeapon( ply, wep, false )
     end

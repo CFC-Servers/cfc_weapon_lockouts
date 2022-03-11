@@ -46,27 +46,31 @@ CFCWeaponLockouts.WARN_BUILDUP = CreateConVar(
     0,
     50000
 )
-CFCWeaponLockouts.NOT_LOCKABLE = {
-    gmod_camera = true,
-    gmod_tool = true,
-    none = true,
-    weapon_physgun = true,
-    weapon_physcannon = true,
-    pac_357 = true,
-    pac_ar2 = true,
-    pac_crossbow = true,
-    pac_crowbar = true,
-    pac_dual = true,
-    pac_pistol = true,
-    pac_rpg = true,
-    pac_shotgun = true,
-    pac_slam = true,
-    pac_smg = true,
-    laserpointer = true,
-    remotecontroller = true,
-    weapon_simremote = true,
-    weapon_simrepair = true,
-    cfc_weapon_parachute = true
+
+CFCWeaponLockouts.LOCKABLE = {
+    -- RPGs and similar weapons:
+    weapon_rpg = true,
+    ins2_atow_rpg7 = true,
+    m9k_rpg7 = true,
+    weapon_lfsmissilelauncher = true,
+
+    -- Long-reload weapons (in general or compared to their peers):
+    cw_tr09_aresshrike = true,
+    m9k_minigun = true,
+    m9k_ares_shrike = true,
+    m9k_m249lmg = true,
+    m9k_m60 = true,
+    m9k_minigun = true,
+    m9k_pkm = true,
+    m9k_barret_m82 = true,
+    m9k_psg1 = true,
+    m9k_svu = true,
+    m9k_svt40 = true,
+    weapon_m249 = true,
+
+    -- Misc:
+    weapon_medkit = true,
+    m9k_m98b = true,
 }
 
 include( "cfc_weapon_lockouts/server/sv_locker.lua" )
