@@ -8,7 +8,7 @@ Players get alerted about their locked weapons once they pick up a weapon that i
 If the server also has [CFC Notifications](https://github.com/CFC-Servers/cfc_notifications/ "CFC Notifications") then this will automatically utilize it, replacing lockout chat warnings with timed, interactive popups.  
 
 ## Usage
-If you simply want to prevent players from skipping reload animations, applying this addon to the server is all that's required.
+If you simply want to prevent players from skipping reload animations, applying this addon to the server and tweaking the list of lockable weapons in `sh_base.lua` is all that's required.  
 Otherwise, these functions are available for use:
 
 - `CFCWeaponLockouts.lockByClass( player, weaponClass, duration )`
@@ -30,7 +30,7 @@ Temporarily locks a weapon class for the owner of a weapon. Useful for if you kn
 
 ## SVars
 - `cfc_weaponlockouts_lockout_time`
-How long lockouts last by default, in seconds. Default is `1`.
+How long lockouts last by default, in seconds. Default is `5`.
 
 - `cfc_weaponlockouts_warn_buildup_window`
 When a player is about to be alerted of a locked weapon, it will wait this many seconds to allow for additional alerts to stack up, combining together instead of sending a bunch individually. Default is `0.2`.
