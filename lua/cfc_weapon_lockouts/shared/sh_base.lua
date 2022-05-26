@@ -12,7 +12,7 @@ function CFCWeaponLockouts.weaponIsLocked( ply, weaponClass )
     return ply.weaponLockouts[weaponClass]
 end
 
-hook.Add( "EntityFireBullets", "CFC_WeaponLockouts_BlockShots", function( ent, data )
+hook.Add( "EntityFireBullets", "CFC_WeaponLockouts_BlockShots", function( ent )
     if not IsValid( ent ) or not ent:IsPlayer() then return end
 
     local wep = ent:GetActiveWeapon()
