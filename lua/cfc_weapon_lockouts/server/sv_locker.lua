@@ -297,7 +297,7 @@ hook.Add( "EntityRemoved", "CFC_WeaponLockouts_LockWeapon", function( ent )
     CFCWeaponLockouts._backend.lockByWeapon( ent )
 end )
 
-hook.Add( "PlayerSwitchWeapon", "CFC_WeaponLockouts_TrackWeaponOwner", function( ply, old, new )
+hook.Add( "PlayerSwitchWeapon", "CFC_WeaponLockouts_TrackWeaponOwner", function( ply, _, new )
     if not IsValid( new ) then return end
 
     new.weaponLockout_Owner = ply
