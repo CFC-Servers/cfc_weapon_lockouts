@@ -7,7 +7,7 @@ local function setLockoutDuration( wep )
     wep.CFC_LockoutTime = wep:SequenceDuration( reload )
 end
 
-hook.Add( "WeaponEquip", "CFC_WeaponLockouts", function( wep, ply )
+hook.Add( "WeaponEquip", "CFC_WeaponLockouts_SetLocket", function( wep, ply )
     local wepClass = wep:GetClass()
 
     -- Sequence information and SetNextPrimaryFire are not available until the next frame
