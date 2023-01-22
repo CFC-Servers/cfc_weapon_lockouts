@@ -18,7 +18,7 @@ hook.Add( "WeaponEquip", "CFC_WeaponLockouts_SetLocket", function( wep, ply )
         setLockoutDuration( wep )
 
         local nextFire = ply.WeaponLockouts[wepClass]
-        if not nextFire then return end
+        if not nextFire or nextFire < CurTime() then return end
 
         wep:SetNextPrimaryFire( nextFire )
     end )
