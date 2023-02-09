@@ -1,3 +1,6 @@
+local CurTime = CurTime
+local IsValid = IsValid
+
 local function getSavedAmmo( ply )
     local savedAmmo = ply.SavedAmmo
 
@@ -13,30 +16,43 @@ end
 hook.Add( "WeaponEquip", "CFC_SavedAmmo_Restore", function( wep, ply )
     local wepClass = wep:GetClass()
     local savedAmmo = getSavedAmmo( ply )
-    if not savedAmmo then return end
 
     savedAmmo = savedAmmo[wepClass]
     if not savedAmmo then return end
 
     wep:SetClip1( savedAmmo.Clip1 )
-    wep:SetClip2( savedAmmo.Clip2 )
 
-    wep:SetNextPrimaryFire( savedAmmo.NextPrimaryFire )
-    wep:SetNextSecondaryFire( savedAmmo.NextSecondaryFire )
+    if savedAmmo.Clip2 then
+        wep:SetClip2( savedAmmo.Clip2 )
+    end
 
-    wep:SetSequence( savedAmmo.Sequence )
+    timer.Simple( 0, function()
+        if not IsValid( wep ) then return end
+        if not IsValid( ply ) then return end
+
+        local now = CurTime()
+
+        local nextPrimary = savedAmmo.NextPrimaryFire
+        if nextPrimary and nextPrimary > now then
+            wep:SetNextPrimaryFire( nextPrimary )
+        end
+
+        local nextSecondary = savedAmmo.NextSecondaryFire
+        if nextSecondary and nextSecondary > now then
+            wep:SetNextSecondaryFire( nextSecondary )
+        end
+    end )
 end )
+
 
 hook.Add( "PlayerDroppedWeapon", "CFC_SavedAmmo_Save", function( ply, wep )
     local wepClass = wep:GetClass()
-    local nextPrimary = wep:GetNextPrimaryFire()
 
     ply.SavedAmmo[wepClass] = {
         Clip1 = wep:Clip1(),
         Clip2 = wep:Clip2(),
         NextPrimaryFire = wep:GetNextPrimaryFire(),
-        NextSecondaryFire = wep:GetNextSecondaryFire(),
-        Sequence = wep:GetSequence(),
+        NextSecondaryFire = wep:GetNextSecondaryFire()
     }
 end )
 
