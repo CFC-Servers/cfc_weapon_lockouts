@@ -54,6 +54,8 @@ CFCWeaponLockouts.LOCKABLE = {
     ins2_atow_rpg7 = true,
     m9k_rpg7 = true,
     weapon_lfsmissilelauncher = true,
+    glide_homing_launcher = true,
+    cfc_stinger_launcher = true,
 
     -- Long-reload weapons (in general or compared to their peers):
     cw_tr09_aresshrike = true,
