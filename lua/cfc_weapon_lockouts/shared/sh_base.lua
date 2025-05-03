@@ -53,7 +53,6 @@ CFCWeaponLockouts.LOCKABLE = {
     weapon_rpg = true,
     ins2_atow_rpg7 = true,
     m9k_rpg7 = true,
-    weapon_lfsmissilelauncher = true,
     glide_homing_launcher = true,
     cfc_stinger_launcher = true,
 
