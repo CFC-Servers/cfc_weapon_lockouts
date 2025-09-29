@@ -36,5 +36,7 @@ How long lockouts last by default, in seconds. Default is `5`.
 When a player is about to be alerted of a locked weapon, it will wait this many seconds to allow for additional alerts to stack up, combining together instead of sending a bunch individually. Default is `0.2`.
 
 ## Config
-- `CFCWeaponLockouts.LOCKABLE`
-A list of weapon classes which are lockable. Defined in [sv_base.lua](https://github.com/CFC-Servers/cfc_weapon_lockouts/blob/master/lua/cfc_weapon_lockouts/shared/sv_base.lua "sv_base").
+- `CFCWeaponLockouts.NOT_LOCKABLE`
+A lookup of weapon classes which are not lockable. Defined in [sh_base.lua](https://github.com/CFC-Servers/cfc_weapon_lockouts/blob/master/lua/cfc_weapon_lockouts/shared/sh_base.lua "sh_base").
+- `CFCWeaponLockouts.LOCK_DURATIONS`
+Overrides the lock durations for specific weapons. Defined in [sh_base.lua](https://github.com/CFC-Servers/cfc_weapon_lockouts/blob/master/lua/cfc_weapon_lockouts/shared/sh_base.lua "sh_base").
