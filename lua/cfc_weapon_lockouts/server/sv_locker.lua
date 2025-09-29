@@ -2,9 +2,21 @@ CFCWeaponLockouts = CFCWeaponLockouts or {}
 CFCWeaponLockouts._lockWarns = {}
 CFCWeaponLockouts._backend = {}
 
+local function isNotLockable( weaponClass )
+    return CFCWeaponLockouts.NOT_LOCKABLE[weaponClass]
+end
+
+local function isLockable( weaponClass )
+    return not isNotLockable( weaponClass )
+end
+
+local function getLockoutDuration( weaponClass, duration )
+    return duration or CFCWeaponLockouts.LOCK_DURATIONS[weaponClass] or CFCWeaponLockouts.LOCKOUT_TIME:GetFloat()
+end
+
 function CFCWeaponLockouts._backend.delayUnlock( ply, wep, weaponClass, duration )
     local timerName = "CFC_WeaponLockouts_Unlock_" .. ply:SteamID() .. "_" .. weaponClass
-    duration = duration or tonumber( CFCWeaponLockouts.LOCKABLE[weaponClass] ) or CFCWeaponLockouts.LOCKOUT_TIME:GetFloat()
+    duration = getLockoutDuration( weaponClass, duration )
 
     ply.weaponLockout_Times = ply.weaponLockout_Times or {}
     ply.weaponLockout_Times[weaponClass] = SysTime() + duration
@@ -33,15 +45,13 @@ function CFCWeaponLockouts.lockByClass( ply, weaponClass, duration )
         return
     end
 
-    local classIsLockable = CFCWeaponLockouts.LOCKABLE[weaponClass]
-
-    if not classIsLockable then
+    if isNotLockable( weaponClass ) then
         error( "That weapon class cannot be locked." )
 
         return
     end
 
-    duration = duration or tonumber( classIsLockable ) or CFCWeaponLockouts.LOCKOUT_TIME:GetFloat()
+    duration = getLockoutDuration( weaponClass, duration )
     ply.weaponLockouts = ply.weaponLockouts or {}
     ply.weaponLockout_Weapons = ply.weaponLockout_Weapons or {}
     ply.weaponLockouts[weaponClass] = true
@@ -78,8 +88,7 @@ function CFCWeaponLockouts._backend.lockByWeapon( ply, wep, lostWeapon, duration
     local weaponClass = wep:GetClass()
     local weaponIsValid = IsValid( wep ) and wep:IsWeapon()
     local playerIsValid = ply:IsPlayer() and ply:Alive()
-    local weaponIsLockable = CFCWeaponLockouts.LOCKABLE[weaponClass]
-    local canLock = weaponIsValid and playerIsValid and weaponIsLockable
+    local canLock = weaponIsValid and playerIsValid and isLockable( weaponClass )
 
     if not canLock then return end
 
@@ -99,7 +108,7 @@ function CFCWeaponLockouts._backend.lockByWeapon( ply, wep, lostWeapon, duration
     net.WriteString( weaponClass )
     net.Broadcast()
 
-    duration = duration or tonumber( weaponIsLockable ) or CFCWeaponLockouts.LOCKOUT_TIME:GetFloat()
+    duration = getLockoutDuration( weaponClass, duration )
 
     CFCWeaponLockouts._backend.delayUnlock( ply, wep, weaponClass, duration )
 end
@@ -114,7 +123,7 @@ function CFCWeaponLockouts._backend.updateLockStatus( ply, wep, weaponClass )
 
     -- In certain cases, EntityRemoved gets called after WeaponEquip, causing odd behavior where the weapon is unlocked, meant to be locked, and not held by the player.
     -- Manually keeping track of the weapon classes held by a player allows us to catch that error.
-    if not isLocked and plyWeapons[weaponClass] and CFCWeaponLockouts.LOCKABLE[weaponClass] then
+    if not isLocked and plyWeapons[weaponClass] and isLockable( weaponClass ) then
         isLocked = true
         CFCWeaponLockouts._backend.lockByWeapon( ply, wep, false )
     end
